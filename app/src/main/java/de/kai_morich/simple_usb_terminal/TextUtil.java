@@ -19,6 +19,43 @@ final class TextUtil {
     final static String newline_crlf = "\r\n";
     final static String newline_lf = "\n";
 
+    public static String textUtilPattern = setPattern();
+    public static String setPattern(){
+        int PACKET_LEN = 1000;
+
+        //To finish on value 3.
+        int pattern_len = PACKET_LEN +2;
+
+        int digit = 0x31;
+        char zero = (char) 0x30;
+        char new_line = (char) 0x0a;
+        char carriage_return = (char) 0x0d;
+        char hash_mark = (char) 0x23 ;
+
+        String packet = "";
+        packet += zero;
+        while(pattern_len > 0){
+            packet += (char) digit;
+            digit ++;
+            if (digit > (0x31 + 8)){
+                digit = 0x31;
+            }
+            pattern_len--;
+        }
+
+        packet += hash_mark;
+        packet += carriage_return;// \r
+        packet += new_line;// \n
+
+
+
+
+//        System.out.println(packet.substring(pattern_len-10,pattern_len));
+//        System.out.println(packet.substring(0,pattern_len));
+//        System.out.println(packet.length());
+        return packet;
+    }
+
     static byte[] fromHexString(final CharSequence s) {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         byte b = 0;
@@ -151,5 +188,56 @@ final class TextUtil {
             }
         }
     }
+
+    static char new_line = (char) 0x0a;
+    static char carriage_return = (char) 0x0d;
+//    static String yoav_pattern = "0123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123#" + carriage_return + new_line;
+    static String yoav_pattern = "0123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123#";
+
+    public static boolean compareStringWithPatternNotConsecutive(String find_patten_in, String pattenToFind){
+        int indexPattern = 0;
+        int lenPattern = pattenToFind.length();
+        boolean found = false;
+        for (int i = 0; i < find_patten_in.length() && !found; i++) {
+            if(find_patten_in.substring(i, i + 1).equals(pattenToFind.substring(indexPattern, indexPattern + 1))){
+                indexPattern++;
+            }
+            if(indexPattern == lenPattern) {
+                found = true;
+            }
+        }
+        return found;
+    }
+
+    public static int compareStringWithPatternNotConsecutive(String find_patten_in, String pattenToFind, int start_index, boolean[] found, int[] count){
+        int indexPattern = 0;
+        int lenPattern = pattenToFind.length();
+        found[0] = false;
+
+        for (int i = start_index; i < find_patten_in.length() && !found[0]; i++) {
+            if(find_patten_in.substring(i, i + 1).equals(pattenToFind.substring(indexPattern, indexPattern + 1))){
+                indexPattern++;
+            }
+            if(indexPattern == lenPattern) {
+                found[0] = true;
+                count[0]++;
+                return i;
+            }
+        }
+        return find_patten_in.length();
+    }
+
+    public static int CountNumberCountFound(String find_patten_in, String pattenToFind){
+        boolean[] found = {false};
+        int[] count = {0};
+        int index_next_find  = 0;
+        while(index_next_find < find_patten_in.length()){
+            index_next_find = compareStringWithPatternNotConsecutive(find_patten_in, pattenToFind,index_next_find,found,count);
+        }
+
+        return count[0];
+    }
+
+
 
 }

@@ -1,5 +1,9 @@
 package de.kai_morich.simple_usb_terminal;
 
+import static de.kai_morich.simple_usb_terminal.TextUtil.*;
+import static de.kai_morich.simple_usb_terminal.TextUtil.textUtilPattern;
+import static de.kai_morich.simple_usb_terminal.TextUtil.yoav_pattern;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -22,6 +26,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +53,7 @@ import java.util.EnumSet;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
+    private static final String TAG = "TerminalFragment";
     private enum Connected { False, Pending, True }
 
     private final BroadcastReceiver broadcastReceiver;
@@ -90,6 +96,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         deviceId = getArguments().getInt("device");
         portNum = getArguments().getInt("port");
         baudRate = getArguments().getInt("baud");
+
     }
 
     @Override
@@ -173,6 +180,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
+        //todo receive text check .
 
         sendText = view.findViewById(R.id.send_text);
         hexWatcher = new TextUtil.HexWatcher(sendText);
@@ -307,13 +315,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         service.disconnect();
         usbSerialPort = null;
     }
-
+    //todo check if here we the data that we need.
     private void send(String str) {
         if(connected != Connected.True) {
             Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
+
             String msg;
             byte[] data;
             if(hexEnabled) {
@@ -326,9 +335,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 msg = str;
                 data = (str + newline).getBytes();
             }
-            SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
+            SpannableStringBuilder spn;
+            spn = new SpannableStringBuilder(msg +'\n');
+//            if(msg.contains("123")){
+//                spn = new SpannableStringBuilder(msg + "hilak1 \n");
+//            } else{
+//                spn = new SpannableStringBuilder(msg +  "hilak2\n");
+//            }
+
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
             receiveText.append(spn);
+            int len = receiveText.getText().toString().length();
+
             service.write(data);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
@@ -359,8 +378,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
                     pendingNewline = msg.charAt(msg.length() - 1) == '\r';
                 }
+
+//                if(msg.contains("123")) {
+//                    msg = (msg + "hilak1 ");
+//                }
                 spn.append(TextUtil.toCaretString(msg, newline.length() != 0));
             }
+        }
+
+        //todo set text :
+        int count_how_many_pattern = CountNumberCountFound(receiveText.getText().toString(),yoav_pattern);
+        if(count_how_many_pattern > 0){
+            spn.append(String.format("--hilak%d--",count_how_many_pattern));
         }
         receiveText.append(spn);
     }

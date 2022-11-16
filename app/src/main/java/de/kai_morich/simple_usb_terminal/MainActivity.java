@@ -1,13 +1,21 @@
 package de.kai_morich.simple_usb_terminal;
 
+import static de.kai_morich.simple_usb_terminal.TextUtil.setPattern;
+import static de.kai_morich.simple_usb_terminal.Utils.*;
+
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
+import java.util.ArrayList;
 
+public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
+    private static final String TAG = "MainActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,6 +27,15 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             getSupportFragmentManager().beginTransaction().add(R.id.fragment, new DevicesFragment(), "devices").commit();
         else
             onBackStackChanged();
+
+    }
+
+
+    @Override
+    protected void onStart() {
+
+        super.onStart();
+
     }
 
     @Override

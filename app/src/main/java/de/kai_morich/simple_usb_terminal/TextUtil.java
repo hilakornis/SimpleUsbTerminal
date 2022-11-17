@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.ColorInt;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 
 final class TextUtil {
 
@@ -192,6 +193,8 @@ final class TextUtil {
     static char new_line = (char) 0x0a;
     static char carriage_return = (char) 0x0d;
 //    static String yoav_pattern = "0123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123#" + carriage_return + new_line;
+
+
     static String yoav_pattern = "0123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123#";
 
     public static boolean compareStringWithPatternNotConsecutive(String find_patten_in, String pattenToFind){
@@ -209,33 +212,104 @@ final class TextUtil {
         return found;
     }
 
-    public static int compareStringWithPatternNotConsecutive(String find_patten_in, String pattenToFind, int start_index, boolean[] found, int[] count){
+
+    public static int CountNumberCountFound(String find_patten_in, String pattenToFind){
+        boolean[] found_pattern = {false};
+        int[] count = {0};
+        int index_next_find  = 0;
+
+        boolean[] found_broken = {false};
+
+        while(index_next_find < find_patten_in.length()){
+            index_next_find = compareStringWithPatternNotConsecutive(find_patten_in, pattenToFind,index_next_find,found_pattern,count, found_broken);
+        }
+
+        return count[0];
+    }
+
+    public static  HashMap<String,Integer> getHistogram(String pattern){
+        HashMap<String, Integer> ret_his = new HashMap<>();
+        for (int i = 0; i < pattern.length(); i++) {
+            String c = pattern.substring(i,i+1);
+            if(!ret_his.containsKey(c)){
+                ret_his.put(c,1);
+            } else {
+                Integer currentCount = ret_his.get(c);
+                ret_his.put(c,currentCount+1);
+            }
+        }
+
+        return ret_his;
+    }
+
+    public static int compareStringWithPatternNotConsecutive(String find_patten_in, String pattenToFind, int start_index, boolean[] found, int[] count, boolean[] has_broken_pattern){
         int indexPattern = 0;
         int lenPattern = pattenToFind.length();
         found[0] = false;
 
         for (int i = start_index; i < find_patten_in.length() && !found[0]; i++) {
-            if(find_patten_in.substring(i, i + 1).equals(pattenToFind.substring(indexPattern, indexPattern + 1))){
+            String char_find_in = find_patten_in.substring(i, i + 1);
+            String char_pattern = pattenToFind.substring(indexPattern, indexPattern + 1);
+
+            if(char_find_in.equals(char_pattern)){
                 indexPattern++;
-            }
-            if(indexPattern == lenPattern) {
-                found[0] = true;
-                count[0]++;
-                return i;
+
+                if(indexPattern == lenPattern) {
+                    // a new pattern has been found.
+                    found[0] = true;
+                    count[0]++;
+                    return i;
+                }
             }
         }
-        return find_patten_in.length();
+//        if(!found[0]){
+//            if(indexPattern > 0 ){
+//                has_broken_pattern[0] = true;
+//
+//            } else  {
+//                int len_find_pattern_in = find_patten_in.length();
+//                String last_char = find_patten_in.substring(len_find_pattern_in-1, len_find_pattern_in);
+//                if(pattenToFind.contains(last_char)){
+//                    has_broken_pattern[0] = true;
+//                }
+//            }
+//        }
+
+
+        return start_index+1;
     }
 
-    public static int CountNumberCountFound(String find_patten_in, String pattenToFind){
-        boolean[] found = {false};
-        int[] count = {0};
-        int index_next_find  = 0;
-        while(index_next_find < find_patten_in.length()){
-            index_next_find = compareStringWithPatternNotConsecutive(find_patten_in, pattenToFind,index_next_find,found,count);
+    public static boolean compareHistogramHasBrokenPatternIn(String patternToFind, String stringToTestSearch){
+        HashMap<String , Integer> histogram_pattern = getHistogram(patternToFind);
+        HashMap<String , Integer> histogram_string_to_search_in = getHistogram(stringToTestSearch);
+
+        for (String key: histogram_pattern.keySet()
+        ) {
+            if(histogram_string_to_search_in.containsKey(key) && histogram_pattern.get(key) < histogram_string_to_search_in.get(key)){
+                return true;
+            }
         }
 
-        return count[0];
+        return false;
+    }
+
+    public static boolean CheckIfHasBrokenPattern(String find_patten_in, String patternToFind){
+        boolean[] found = {false};
+        int[] count = {0};
+
+        int start_index = 0;
+        int end_index = 0;
+        boolean[] has_broken_pattern = {false};
+        while(start_index < find_patten_in.length() && !has_broken_pattern[0]){
+            end_index = compareStringWithPatternNotConsecutive(find_patten_in, patternToFind, start_index, found, count, has_broken_pattern);
+            if(has_broken_pattern[0]){
+                break;
+            }
+            has_broken_pattern[0] = compareHistogramHasBrokenPatternIn(patternToFind, find_patten_in.substring(start_index,end_index));
+            start_index = end_index + 1;
+        }
+
+        return has_broken_pattern[0];
     }
 
 

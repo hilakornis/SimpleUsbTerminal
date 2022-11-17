@@ -50,28 +50,27 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
+import java.util.HashMap;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
     private static final String TAG = "TerminalFragment";
-    private enum Connected { False, Pending, True }
-
     private final BroadcastReceiver broadcastReceiver;
     private int deviceId, portNum, baudRate;
     private UsbSerialPort usbSerialPort;
     private SerialService service;
-
     private TextView receiveText;
     private TextView sendText;
     private ControlLines controlLines;
     private TextUtil.HexWatcher hexWatcher;
-
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private boolean hexEnabled = false;
     private boolean controlLinesEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+    private int counter_broken = 0;
+    private int counter_hash_mark = 0;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -315,6 +314,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         service.disconnect();
         usbSerialPort = null;
     }
+
     //todo check if here we the data that we need.
     private void send(String str) {
         if(connected != Connected.True) {
@@ -384,14 +384,28 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 //                }
                 spn.append(TextUtil.toCaretString(msg, newline.length() != 0));
             }
+
+
         }
 
         //todo set text :
-        int count_how_many_pattern = CountNumberCountFound(receiveText.getText().toString(),yoav_pattern);
-        if(count_how_many_pattern > 0){
-            spn.append(String.format("--hilak%d--",count_how_many_pattern));
+
+
+
+        boolean has_broken_pattern = CheckIfHasBrokenPattern(receiveText.getText().toString(),yoav_pattern);
+        counter_hash_mark++;
+        if(has_broken_pattern){
+            counter_broken ++;
+            Toast.makeText(service, String.format("----- has broken packets!!! %d----", counter_broken), Toast.LENGTH_SHORT).show();
+            spn.append(String.format("----- has broken packets!!! %d----", counter_broken));
         }
+
+
+
+        //to print after every line :
+//        spn.append("----- hilak ------");
         receiveText.append(spn);
+
     }
 
     void status(String str) {
@@ -433,6 +447,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         status("connection lost: " + e.getMessage());
         disconnect();
     }
+
+    private enum Connected { False, Pending, True }
 
     class ControlLines {
         private static final int refreshInterval = 200; // msec

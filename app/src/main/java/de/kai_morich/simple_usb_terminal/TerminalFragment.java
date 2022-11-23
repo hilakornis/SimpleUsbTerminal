@@ -1,11 +1,13 @@
 package de.kai_morich.simple_usb_terminal;
 
+import static android.os.Environment.getExternalStorageDirectory;
 import static de.kai_morich.simple_usb_terminal.TextUtil.*;
-import static de.kai_morich.simple_usb_terminal.TextUtil.textUtilPattern;
+
 import static de.kai_morich.simple_usb_terminal.TextUtil.yoav_pattern;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Application;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -47,6 +49,9 @@ import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
@@ -204,7 +209,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.clear) {
+            //todo here send text to me . or save text as a file .
+//            SaveTxtToSDCart(service,receiveText.getText().toString());
+
             receiveText.setText("");
+
+
             return true;
         } else if (id == R.id.newline) {
             String[] newlineNames = getResources().getStringArray(R.array.newline_names);
@@ -315,7 +325,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         usbSerialPort = null;
     }
 
-    //todo check if here we the data that we need.
+
     private void send(String str) {
         if(connected != Connected.True) {
             Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
@@ -358,7 +368,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private void receive(ArrayDeque<byte[]> datas) {
         SpannableStringBuilder spn = new SpannableStringBuilder();
+        int total_size = 0;
+
         for (byte[] data : datas) {
+
+            total_size += data.length;
+
+
             if (hexEnabled) {
                 spn.append(TextUtil.toHexString(data)).append('\n');
             } else {
@@ -388,18 +404,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         }
 
-        //todo set text :
+        //todo remove this :
 
-
-
-        boolean has_broken_pattern = CheckIfHasBrokenPattern(receiveText.getText().toString(),yoav_pattern);
-        counter_hash_mark++;
-        if(has_broken_pattern){
-            counter_broken ++;
-            Toast.makeText(service, String.format("----- has broken packets!!! %d----", counter_broken), Toast.LENGTH_SHORT).show();
-            spn.append(String.format("----- has broken packets!!! %d----", counter_broken));
-        }
-
+//        boolean has_broken_pattern = CheckIfHasBrokenPattern(receiveText.getText().toString(),yoav_pattern);
+//        counter_hash_mark++;
+//        if(has_broken_pattern){
+//            counter_broken ++;
+////            Toast.makeText(service, String.format("----- has broken packets!!! %d----", counter_broken), Toast.LENGTH_SHORT).show();
+////            spn.append(String.format("----- has broken packets!!! %d----", counter_broken));
+//
+//        }
+        spn.append("----  Total size: " + String.valueOf(total_size) + " ----");
 
 
         //to print after every line :

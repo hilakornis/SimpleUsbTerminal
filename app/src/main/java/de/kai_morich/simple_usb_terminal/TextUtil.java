@@ -1,5 +1,8 @@
 package de.kai_morich.simple_usb_terminal;
 
+import static android.os.Environment.getExternalStorageDirectory;
+
+import android.content.Context;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Spannable;
@@ -7,10 +10,15 @@ import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.BackgroundColorSpan;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 
 final class TextUtil {
@@ -20,7 +28,7 @@ final class TextUtil {
     final static String newline_crlf = "\r\n";
     final static String newline_lf = "\n";
 
-    public static String textUtilPattern = setPattern();
+
     public static String setPattern(){
         int PACKET_LEN = 1000;
 
@@ -312,6 +320,29 @@ final class TextUtil {
         return has_broken_pattern[0];
     }
 
+    public static void SaveTxtToSDCart(Context context, String txt)
+    {
+        File file = new File(getExternalStorageDirectory(), "hilak_test_packets.txt");
+        Toast.makeText(context, "Writing file to here: ", Toast.LENGTH_SHORT).show();
+        if(!file.exists()){
+            Toast.makeText(context, "Error file does not exists.", Toast.LENGTH_SHORT).show();
+        }
+
+
+        try{
+            FileOutputStream stream = null;
+            stream = new FileOutputStream(file);
+            stream.write(txt.getBytes());
+            stream.close();
+
+        }  catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Toast.makeText(context, "1", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(context, "2", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
 }
